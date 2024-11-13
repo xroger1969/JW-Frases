@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Versículos Revelados</title>
     <style>
         body {
@@ -17,18 +18,21 @@
         #instructions {
             position: fixed;
             color: white;
-            font-size: 24px;
+            font-size: min(24px, 5vw);
             text-align: center;
             top: 20px;
             width: 100%;
             transition: opacity 1s;
             padding: 0 20px;
+            z-index: 1000;
         }
         .letter {
             position: absolute;
-            font-size: 30px;
+            font-size: min(48px, 8vw); /* Letras maiores e responsivas */
             pointer-events: none;
             animation: fadeIn 0.5s forwards;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            font-weight: bold;
         }
         @keyframes fadeIn {
             from { 
@@ -52,13 +56,14 @@
             width: 100%;
             text-align: center;
             color: rgba(255, 255, 255, 0.3);
-            font-size: 16px;
+            font-size: min(16px, 4vw);
             padding: 0 20px;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
-    <div id="instructions">Desenhe da esquerda para a direita para revelar o versículo</div>
+    <div id="instructions">Desenhe na tela para revelar o versículo</div>
     <div id="currentVerse"></div>
 
     <script>
@@ -71,6 +76,7 @@
             "Lança o teu fardo sobre Jeová, e ele amparar-te-á. — Salmos 55:22",
             "Jeová é a minha luz e a minha salvação. A quem hei de temer? — Salmos 27:1",
             "Aproximem-se de Deus, e ele se aproximará de vocês. — Tiago 4:8",
+            "O Senhor é bom; é uma fortaleza no dia da aflição. E conhece os que se refugiam nele. — Naum 1:7",
             "Felizes os que têm consciência da sua necessidade espiritual, porque a eles pertence o Reino dos céus. — Mateus 5:3",
             "A paz de Deus, que está além de toda a compreensão, guardará o vosso coração e a vossa mente. — Filipenses 4:7",
             "Jeová é o teu Protetor; Jeová é a tua sombra protetora à tua direita. — Salmos 121:5",
@@ -85,7 +91,7 @@
         let lastX = 0;
         let lastY = 0;
         let hue = 0;
-        const SPACING = 20;
+        const SPACING = 15; // Reduzido o espaçamento para melhor fluidez
 
         function hsvToRgb(h, s, v) {
             let r, g, b;
@@ -109,7 +115,7 @@
             for (let i = 0; i < 3; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
-                const size = Math.random() * 8 + 4;
+                const size = Math.random() * 12 + 6; // Partículas maiores
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
                 particle.style.background = color;
@@ -163,8 +169,6 @@
             
             currentIndex++;
             hue = (hue + 0.02) % 1;
-
-            // Atualiza o verso atual no rodapé
             document.getElementById('currentVerse').textContent = currentVerse;
         }
 
@@ -174,9 +178,7 @@
 
             if (lastX && lastY) {
                 const distance = Math.sqrt(Math.pow(x - lastX, 2) + Math.pow(y - lastY, 2));
-                const movingRight = x > lastX;
-
-                if (movingRight && distance > SPACING) {
+                if (distance > SPACING) {
                     revealNextLetter(x, y);
                     lastX = x;
                     lastY = y;
