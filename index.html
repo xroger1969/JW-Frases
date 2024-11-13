@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Versículos Revelados</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #262b30;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #instructions {
+            position: fixed;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            top: 20px;
+            width: 100%;
+            transition: opacity 1s;
+        }
+        .letter {
+            position: absolute;
+            font-size: 30px;
+            pointer-events: none;
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">Desenhe com o dedo para revelar o versículo</div>
+
+    <script>
+        const verses = [
+            "Jeová é o meu Pastor. Nada me faltará. — Salmos 23:1",
+            "Confia em Jeová de todo o teu coração. — Provérbios 3:5",
+            "Todas as coisas são possíveis com Deus. — Marcos 10:27",
+            "Para Deus nada é impossível. — Lucas 1:37",
+            "Felizes os pacificadores, visto que serão chamados 'filhos de Deus'. — Mateus 5:9",
+            "Lança o teu fardo sobre Jeová, e ele amparar-te-á. — Salmos 55:22"
+        ];
+
+        let currentVerse = verses[0];
+        let currentIndex = 0;
+        let verseIndex = 0;
+        let lastX = 0;
+        let lastY = 0;
+        let hue = 0;
+        const SPACING = 20;
+
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = v, g = t, b = p; break;
+                case 1: r = q, g = v, b = p; break;
+                case 2: r = p, g = v, b = t; break;
+                case 3: r = p, g = q, b = v; break;
+                case 4: r = t, g = p, b = v; break;
+                case 5: r = v, g = p, b = q; break;
+            }
+            return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 3; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 8 + 4;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.background = color;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 30 + 15;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                document.body.appendChild(particle);
+
+                particle.animate([
+                    { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
+                    { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                });
+
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        function revealNextLetter(x, y) {
+            if (currentIndex >= currentVerse.length) {
+                // Quando terminar a frase atual, prepare a próxima
+                setTimeout(() => {
+                    document.querySelectorAll('.letter').forEach(el => el.remove());
+                    currentIndex = 0;
+                    verseIndex = (verseIndex + 1) % verses.length;
+                    currentVerse = verses[verseIndex];
+                }, 1000);
+                return;
+            }
+
+            const letter = currentVerse[currentIndex];
+            const element = document.createElement('div');
+            element.className = 'letter';
+            element.textContent = letter;
+            
+            // Calcula a posição baseada no índice da letra
+            const color = hsvToRgb(hue, 0.8, 1);
+            element.style.color = color;
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            element.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(element);
+
+            createParticles(x, y, color);
+            
+            currentIndex++;
+            hue = (hue + 0.02) % 1;
+        }
+
+        function handleMove(e) {
+            const x = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            if (lastX && lastY) {
+                const distance = Math.sqrt(Math.pow(x - lastX, 2) + Math.pow(y - lastY, 2));
+                if (distance > SPACING) {
+                    revealNextLetter(x, y);
+                    lastX = x;
+                    lastY = y;
+                    document.getElementById('instructions').style.opacity = '0';
+                }
+            } else {
+                lastX = x;
+                lastY = y;
+            }
+        }
+
+        function handleEnd() {
+            lastX = 0;
+            lastY = 0;
+        }
+
+        // Event Listeners
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchmove', handleMove);
+        document.addEventListener('touchend', handleEnd);
+        document.addEventListener('touchstart', e => e.preventDefault());
+    </script>
+</body>
+</html>
